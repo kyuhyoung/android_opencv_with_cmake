@@ -18,6 +18,9 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 //////////////////////////////////////////////////////////////
+import org.opencv.dnn.Net;
+import org.opencv.core.Size;
+import org.opencv.core.Scalar;
 import android.os.Environment;
 import android.content.res.AssetManager;
 import java.io.File;
@@ -33,6 +36,13 @@ public class MainActivity extends AppCompatActivity
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat matInput;
     private Mat matResult;
+    private Net net;
+    private double skale;
+    private Size inpSize;
+    private Scalar mean;
+    private boolean swapRB;
+    private std::vector<String> &outNames = *(vector<String> *)addrOutNames;
+
 
 
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
@@ -203,7 +213,18 @@ public class MainActivity extends AppCompatActivity
 
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
 
-        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+        //ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+        yolo(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(), net.getNativeObjAddr(),
+                //scale.getNativeObjAddr(),
+                skale,
+                //InpSize.getNativeObjAddr(),
+                inpSize,
+                //mean.getNativeObjAddr(),
+                mean,
+                //swapRB.getNativeObjAddr(),
+                swapRB,
+                outNames.getNativeObjAddr(),
+                thConf.getNativeObjAddr(), thNms.getNativeObjAddr(), klasses.getNativeObjAddr());
 
         return matResult;
     }

@@ -149,8 +149,12 @@ void postprocess(Mat& frame, const std::vector<Mat>& outs, Net& net,
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
-        jobject instance, jlong matAddrInput, jlong matAddrResult, jlong addrNet, jlong addrScale,
-        jlong addrInpSize, jlong addrMean, jlong addrSwapRB, jlong addrOutNames,
+        jobject instance, jlong matAddrInput, jlong matAddrResult, jlong addrNet,
+        //jlong addrScale,
+        double& skale,
+        //jlong addrInpSize,
+        Size& inpSize,
+        jlong addrMean, jlong addrSwapRB, jlong addrOutNames,
         jlong addrThConf, jlong addrThNms, jlong addrClasses)
 {
     // TODO
@@ -161,8 +165,8 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         &matResult = *(Mat *)matAddrResult;
 
     matInput.copyTo(matResult);
-    double &scale = *(double *)addrScale;
-    Size &inpSize = *(Size *)addrInpSize;
+    //double &skale = *(double *)addrScale;
+    //Size &inpSize = *(Size *)addrInpSize;
     Scalar &mean = *(Scalar *)addrMean;
     bool &swapRB = *(bool *)addrSwapRB;
     Net &net = *(Net *)addrNet;
@@ -171,7 +175,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
             &th_nms = *(float *)addrThNms;
     vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
 
-    blobFromImage(matInput, blob, scale, inpSize, mean, swapRB, false);
+    blobFromImage(matInput, blob, skale, inpSize, mean, swapRB, false);
 
     // Run a model.
     net.setInput(blob);
