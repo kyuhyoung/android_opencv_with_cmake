@@ -55,6 +55,8 @@ find_library( # Sets the name of the path variable.
 target_link_libraries( # Specifies the target library.
         native-lib
 
+        ${android-lib}
+
         lib_opencv
 
         # Links the target library to the log library

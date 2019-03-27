@@ -17,7 +17,14 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
-
+//////////////////////////////////////////////////////////////
+import android.os.Environment;
+import android.content.res.AssetManager;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+//////////////////////////////////////////////////////////////
 
 public class MainActivity extends AppCompatActivity
         implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -31,10 +38,65 @@ public class MainActivity extends AppCompatActivity
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
 
 
+    //public native long loadCascade(String cascadeFileName );
+    public native long load_yolo_weight(String fn_yolo_weight);
+    public native void detect(long cascadeClassifier_face,
+                              long cascadeClassifier_eye, long matAddrInput, long matAddrResult);
+    public long cascadeClassifier_face = 0;
+    public long cascadeClassifier_eye = 0;
+
+
+
+
     static {
         System.loadLibrary("opencv_java4");
         System.loadLibrary("native-lib");
     }
+
+
+    private void copyFile(String filename) {
+        String baseDir = Environment.getExternalStorageDirectory().getPath();
+        String pathDir = baseDir + File.separator + filename;
+
+        AssetManager assetManager = this.getAssets();
+
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+
+        try {
+            Log.d( TAG, "copyFile :: 다음 경로로 파일복사 "+ pathDir);
+            inputStream = assetManager.open(filename);
+            outputStream = new FileOutputStream(pathDir);
+
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+            inputStream.close();
+            inputStream = null;
+            outputStream.flush();
+            outputStream.close();
+            outputStream = null;
+        } catch (Exception e) {
+            Log.d(TAG, "copyFile :: 파일 복사 중 예외 발생 "+e.toString() );
+        }
+
+    }
+
+    private void read_yolo_file()
+    {
+        copyFile("haarcascade_frontalface_alt.xml");
+        copyFile("haarcascade_eye_tree_eyeglasses.xml");
+
+        Log.d(TAG, "read_cascade_file:");
+
+        //cascadeClassifier_face = loadCascade( "haarcascade_frontalface_alt.xml");
+        Log.d(TAG, "read_cascade_file:");
+
+        //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
+    }
+
 
 
 
@@ -74,6 +136,14 @@ public class MainActivity extends AppCompatActivity
                 //퍼미션 허가 안되어있다면 사용자에게 요청
                 requestPermissions(PERMISSIONS, PERMISSIONS_REQUEST_CODE);
             }
+            else
+            {
+                read_yolo_file(); //   추가
+            }
+        }
+        else
+        {
+            read_yolo_file();   //  추가
         }
 
         mOpenCvCameraView = (CameraBridgeViewBase)findViewById(R.id.activity_surface_view);
@@ -142,7 +212,9 @@ public class MainActivity extends AppCompatActivity
 
     //여기서부턴 퍼미션 관련 메소드
     static final int PERMISSIONS_REQUEST_CODE = 1000;
-    String[] PERMISSIONS  = {"android.permission.CAMERA"};
+    //String[] PERMISSIONS  = {"android.permission.CAMERA"};
+    String[] PERMISSIONS  = {"android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE"};
 
 
     private boolean hasPermissions(String[] permissions) {
@@ -176,9 +248,23 @@ public class MainActivity extends AppCompatActivity
                 if (grantResults.length > 0) {
                     boolean cameraPermissionAccepted = grantResults[0]
                             == PackageManager.PERMISSION_GRANTED;
-
+/*////////////////////////////////////////////////////////////////////////////////////////////////////////
                     if (!cameraPermissionAccepted)
                         showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
+*/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    boolean writePermissionAccepted = grantResults[1]
+                            == PackageManager.PERMISSION_GRANTED;
+
+                    if (!cameraPermissionAccepted || !writePermissionAccepted) {
+                        showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
+                        return;
+                    }
+                    else
+                    {
+                        read_yolo_file();
+                    }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
                 }
                 break;
         }
