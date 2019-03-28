@@ -27,6 +27,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+//import java.lang.String;
+
 //////////////////////////////////////////////////////////////
 
 public class MainActivity extends AppCompatActivity
@@ -36,24 +39,36 @@ public class MainActivity extends AppCompatActivity
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat matInput;
     private Mat matResult;
-    private Net net;
+    //private Net net;
     private double skale;
     private Size inpSize;
     private Scalar mean;
     private boolean swapRB;
-    private std::vector<String> &outNames = *(vector<String> *)addrOutNames;
+    private ArrayList<String> outNames, klasses;
+    private float thConf, thNms;
+    private String fn_mdoel, fn_cfg, str_framework;
+    private int int_backend, int_target;
 
 
 
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
+    public native void yolo(long matAddrInput, long matAddrResult,
+                            long addrNet, double skale, Size inpSize,
+                            Scalar mean, boolean swapRB, ArrayList<String> jOutNames,
+                            float thConf, float thNms, ArrayList<String> klasses);
 
 
     //public native long loadCascade(String cascadeFileName );
-    public native long load_yolo_weight(String fn_yolo_weight);
+    //public native long load_yolo_weight(String fn_yolo_weight);
+    public native long load_darkent(String fn_mdoel, String fn_cfg, String str_framework,
+                                    int int_backend, int int_target);
+
+
     public native void detect(long cascadeClassifier_face,
                               long cascadeClassifier_eye, long matAddrInput, long matAddrResult);
     public long cascadeClassifier_face = 0;
     public long cascadeClassifier_eye = 0;
+    public long ptr_net = 0;
 
 
 
@@ -94,9 +109,10 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void read_yolo_file()
+    //private void read_yolo_file()
+    private void init_yolo()
     {
-        copyFile("haarcascade_frontalface_alt.xml");
+/*        copyFile("haarcascade_frontalface_alt.xml");
         copyFile("haarcascade_eye_tree_eyeglasses.xml");
 
         Log.d(TAG, "read_cascade_file:");
@@ -105,6 +121,8 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "read_cascade_file:");
 
         //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
+*/
+        ptr_net = load_darkent(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
     }
 
 
@@ -148,12 +166,12 @@ public class MainActivity extends AppCompatActivity
             }
             else
             {
-                read_yolo_file(); //   추가
+                init_yolo(); //   추가
             }
         }
         else
         {
-            read_yolo_file();   //  추가
+            init_yolo();   //  추가
         }
 
         mOpenCvCameraView = (CameraBridgeViewBase)findViewById(R.id.activity_surface_view);
@@ -214,7 +232,10 @@ public class MainActivity extends AppCompatActivity
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
 
         //ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
-        yolo(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(), net.getNativeObjAddr(),
+        yolo(matInput.getNativeObjAddr(),
+                matResult.getNativeObjAddr(),
+                //net.getNativeObjAddr(),
+                net,
                 //scale.getNativeObjAddr(),
                 skale,
                 //InpSize.getNativeObjAddr(),
@@ -223,8 +244,10 @@ public class MainActivity extends AppCompatActivity
                 mean,
                 //swapRB.getNativeObjAddr(),
                 swapRB,
-                outNames.getNativeObjAddr(),
-                thConf.getNativeObjAddr(), thNms.getNativeObjAddr(), klasses.getNativeObjAddr());
+                outNames,
+                thConf,
+                thNms,
+                klasses);
 
         return matResult;
     }

@@ -145,6 +145,43 @@ void postprocess(Mat& frame, const std::vector<Mat>& outs, Net& net,
     }
 }
 
+//extern "C"
+//JNIEXPORT
+std::string
+//JNICALL
+jstring2string(JNIEnv *env, jstring jStr) {
+    if (!jStr)
+        return "";
+
+    const jclass stringClass = env->GetObjectClass(jStr);
+    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
+    const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
+
+    size_t length = (size_t) env->GetArrayLength(stringJbytes);
+    jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+    std::string ret = std::string((char *)pBytes, length);
+    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+
+    env->DeleteLocalRef(stringJbytes);
+    env->DeleteLocalRef(stringClass);
+    return ret;
+}
+
+extern "C"
+JNIEXPORT Net JNICALL
+Java_com_example_use_1opencv_1with_1cmake_MainActivity_load_1darkent(JNIEnv *env,
+        jobject instance, jstring fn_model, jstring fn_cfg, jstring str_framework,
+        jint int_backend, jint int_target)
+{
+    Net net = readNet(fn_model, fn_cfg, str_framework);
+    net.setPreferableBackend(int_backend);
+    net.setPreferableTarget(int_target);
+    return
+    h
+    \rf]yhtyhtfdhf\dfg >""
+
+        //jlong addrScale,
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -154,11 +191,55 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         double& skale,
         //jlong addrInpSize,
         Size& inpSize,
-        jlong addrMean, jlong addrSwapRB, jlong addrOutNames,
-        jlong addrThConf, jlong addrThNms, jlong addrClasses)
+        jlong addrMean,
+        bool& swapRB,
+        jobject jOutNames,
+        float& thConf,
+        float& thNms,
+        jobject& jClasses)
 {
     // TODO
     // 입력 RGBA 이미지를 GRAY 이미지로 변환
+    jclass alCls = env->FindClass("java/util/ArrayList");
+    jclass stCls = env->FindClass("java/lang/String");
+    if (alCls == nullptr  || stCls == nullptr) {
+        return;
+    }
+
+    //jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/Object;");
+    jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/String;");
+    jmethodID alSizeId = env->GetMethodID(alCls, "size", "()I");
+
+    if (alGetId == nullptr || alSizeId == nullptr) {
+        env->DeleteLocalRef(alCls);
+        env->DeleteLocalRef(stCls);
+        return;
+    }
+
+    int n_str_outNames = static_cast<int>(env->CallIntMethod(jOutNames, alSizeId)),
+        n_str_classes = static_cast<int>(env->CallIntMethod(jClasses, alSizeId));
+
+    if (n_str_outNames < 1 || n_str_classes < 1 ) {
+        env->DeleteLocalRef(alCls);
+        env->DeleteLocalRef(stCls);
+        return;
+    }
+
+    std::vector<std::string> outNames, klasses;
+    for (int i = 0; i < n_str_outNames; ++i) {
+        jobject str = env->CallObjectMethod(jOutNames, alGetId, i);
+        //jstring str = env->CallObjectMethod(jOutNames, alGetId, i);
+        outNames.push_back(jstring2string(env, (jstring)str));
+        env->DeleteLocalRef(str);
+    }
+    for (int i = 0; i < n_str_classes; ++i) {
+        //jstring str = env->CallObjectMethod(jClasses, alGetId, i);
+        jobject str = env->CallObjectMethod(jClasses, alGetId, i);
+        klasses.push_back(jstring2string(env, (jstring)str));
+        env->DeleteLocalRef(str);
+    }
+
+
 
     Mat blob,
         &matInput = *(Mat *)matAddrInput,
@@ -168,12 +249,12 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
     //double &skale = *(double *)addrScale;
     //Size &inpSize = *(Size *)addrInpSize;
     Scalar &mean = *(Scalar *)addrMean;
-    bool &swapRB = *(bool *)addrSwapRB;
+    //bool &swapRB = *(bool *)addrSwapRB;
     Net &net = *(Net *)addrNet;
-    vector<String> &outNames = *(vector<String> *)addrOutNames;
+    //vector<String> &outNames = *(vector<String> *)addrOutNames;
     float &th_conf = *(float *)addrThConf,
             &th_nms = *(float *)addrThNms;
-    vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
+    //vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
 
     blobFromImage(matInput, blob, skale, inpSize, mean, swapRB, false);
 
@@ -204,8 +285,8 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
 
 #if 1
 /////////////////////////////////////////////////////
-    matResult = matInput;
-    rectangle(matResult, Point2d(100, 150), Point2d(200, 300), CV_RGB(255, 0, 0));
+    //matResult = matInput;
+    //rectangle(matResult, Point2d(100, 150), Point2d(200, 300), CV_RGB(255, 0, 0));
 /////////////////////////////////////////////////////
 #else
     cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
