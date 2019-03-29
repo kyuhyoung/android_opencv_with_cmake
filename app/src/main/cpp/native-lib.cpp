@@ -169,17 +169,22 @@ jstring2string(JNIEnv *env, jstring jStr) {
 }
 
 extern "C"
-JNIEXPORT Net JNICALL
+JNIEXPORT
+//Net
+jlong
+JNICALL
 Java_com_example_use_1opencv_1with_1cmake_MainActivity_load_1darkent(JNIEnv *env,
         jobject instance, jstring fn_model, jstring fn_cfg, jstring str_framework,
         jint int_backend, jint int_target)
 {
-    Net net = readNet(fn_model, fn_cfg, str_framework);
-    net.setPreferableBackend(int_backend);
-    net.setPreferableTarget(int_target);
-    return
-    h
-    \rf]yhtyhtfdhf\dfg >""
+    jlong ret = 0; ret = (jlong) new Net();
+    *((Net *) ret) = readNet(jstring2string(env, fn_model), jstring2string(env, fn_cfg), jstring2string(env, str_framework));
+    //ret = (jlong) new Net() cv::dnn::readNet(fn_model, fn_cfg, str_framework);
+    ((Net *) ret)->setPreferableBackend(int_backend);
+    ((Net *) ret)->setPreferableTarget(int_target);
+    //return (jlong)(&net);
+    return ret;
+}
 
         //jlong addrScale,
 
@@ -252,8 +257,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
     //bool &swapRB = *(bool *)addrSwapRB;
     Net &net = *(Net *)addrNet;
     //vector<String> &outNames = *(vector<String> *)addrOutNames;
-    float &th_conf = *(float *)addrThConf,
-            &th_nms = *(float *)addrThNms;
+    //float &th_conf = *(float *)addrThConf, &th_nms = *(float *)addrThNms;
     //vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
 
     blobFromImage(matInput, blob, skale, inpSize, mean, swapRB, false);
@@ -272,7 +276,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
 
 
     //postprocess(frame, outs, net);
-    postprocess(matResult, outs, net, th_conf, th_nms, klasses);
+    postprocess(matResult, outs, net, thConf, thNms, klasses);
 
     // Put efficiency information.
     std::vector<double> layersTimes;
