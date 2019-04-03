@@ -173,10 +173,12 @@ JNIEXPORT
 //Net
 jlong
 JNICALL
-Java_com_example_use_1opencv_1with_1cmake_MainActivity_load_1darkent(JNIEnv *env,
+Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarkent(JNIEnv *env,
         jobject instance, jstring fn_model, jstring fn_cfg, jstring str_framework,
         jint int_backend, jint int_target)
 {
+    printf("AAA loadDarknet\n");
+
     jlong ret = 0; ret = (jlong) new Net();
     *((Net *) ret) = readNet(jstring2string(env, fn_model), jstring2string(env, fn_cfg), jstring2string(env, str_framework));
     //ret = (jlong) new Net() cv::dnn::readNet(fn_model, fn_cfg, str_framework);

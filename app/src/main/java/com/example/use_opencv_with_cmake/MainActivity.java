@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity
 
     //public native long loadCascade(String cascadeFileName );
     //public native long load_yolo_weight(String fn_yolo_weight);
-    public native long load_darknet(String fn_mdoel, String fn_cfg, String str_framework,
+    public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework,
                                     int int_backend, int int_target);
 
 
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity
 
         //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
 */
-        ptr_net = load_darknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
+        ptr_net = loadDarknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
     }
 
 
