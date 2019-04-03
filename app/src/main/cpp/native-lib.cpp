@@ -173,14 +173,29 @@ JNIEXPORT
 //Net
 jlong
 JNICALL
-Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarkent(JNIEnv *env,
-        jobject instance, jstring fn_model, jstring fn_cfg, jstring str_framework,
-        jint int_backend, jint int_target)
+Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarknet(JNIEnv *env, jobject instance
+/*
+        ,jstring modelPath, jstring configPath, jstring str_framework,
+        //std::string modelPath, std::string configPath, std::string str_framework,
+        jint int_backend, jint int_target
+*/
+        )
 {
     printf("AAA loadDarknet\n");
+    int a = 0;
+    float b = 1;
+    std::string c = "abc";
+    int int_backend = 0, int_target = 1;
 
+/*
+    std::string fn_model = jstring2string(env, modelPath);
+    std::string fn_config = jstring2string(env, configPath);
+    std::string frmwork = jstring2string(env, str_framework);
+*/
     jlong ret = 0; ret = (jlong) new Net();
-    *((Net *) ret) = readNet(jstring2string(env, fn_model), jstring2string(env, fn_cfg), jstring2string(env, str_framework));
+    //*((Net *) ret) = readNet(jstring2string(env, modelPath), jstring2string(env, configPath), jstring2string(env, str_framework));
+    *((Net *) ret) = readNet("C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.weights", "C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.cfg", "darknet");
+    //*((Net *) ret) = readNet("C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.weights", "C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.cfg", "darknet");
     //ret = (jlong) new Net() cv::dnn::readNet(fn_model, fn_cfg, str_framework);
     ((Net *) ret)->setPreferableBackend(int_backend);
     ((Net *) ret)->setPreferableTarget(int_target);

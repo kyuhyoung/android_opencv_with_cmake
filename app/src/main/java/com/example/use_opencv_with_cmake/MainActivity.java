@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity
 
     //public native long loadCascade(String cascadeFileName );
     //public native long load_yolo_weight(String fn_yolo_weight);
-    public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework,
-                                    int int_backend, int int_target);
+    //public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework, int int_backend, int int_target);
+    public native long loadDarknet();
 
 
     public native void detect(long cascadeClassifier_face,
@@ -112,6 +112,12 @@ public class MainActivity extends AppCompatActivity
     //private void read_yolo_file()
     private void init_yolo()
     {
+        fn_mdoel = "yolov3.weights";
+        fn_cfg = "yolov3.cfg";
+        str_framework = "darknet";
+        int_backend = 0;
+        //int_backend = 3;
+        int_target = 1;
 /*        copyFile("haarcascade_frontalface_alt.xml");
         copyFile("haarcascade_eye_tree_eyeglasses.xml");
 
@@ -122,7 +128,8 @@ public class MainActivity extends AppCompatActivity
 
         //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
 */
-        ptr_net = loadDarknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
+        //ptr_net = loadDarknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
+        ptr_net = loadDarknet();
     }
 
 
