@@ -18,7 +18,6 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 //////////////////////////////////////////////////////////////
-import org.opencv.dnn.Net;
 import org.opencv.core.Size;
 import org.opencv.core.Scalar;
 import android.os.Environment;
@@ -28,6 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
+import java.lang.Object;
 //import java.lang.String;
 
 //////////////////////////////////////////////////////////////
@@ -44,9 +46,9 @@ public class MainActivity extends AppCompatActivity
     private Size inpSize;
     private Scalar mean;
     private boolean swapRB;
-    private ArrayList<String> outNames, klasses;
+    private ArrayList<String> klasses;//outNames,
     private float thConf, thNms;
-    private String fn_mdoel, fn_cfg, str_framework;
+    private String fn_class, fn_model, fn_cfg, str_framework;
     private int int_backend, int_target;
 
 
@@ -54,14 +56,15 @@ public class MainActivity extends AppCompatActivity
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
     public native void yolo(long matAddrInput, long matAddrResult,
                             long addrNet, double skale, Size inpSize,
-                            Scalar mean, boolean swapRB, ArrayList<String> jOutNames,
+                            Scalar mean, boolean swapRB,
+                            //ArrayList<String> jOutNames,
                             float thConf, float thNms, ArrayList<String> klasses);
 
 
     //public native long loadCascade(String cascadeFileName );
     //public native long load_yolo_weight(String fn_yolo_weight);
-    //public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework, int int_backend, int int_target);
-    public native long loadDarknet();
+    public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework, int int_backend, int int_target);
+    //public native long loadDarknet();
 
 
     public native void detect(long cascadeClassifier_face,
@@ -79,7 +82,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void copyFile(String filename) {
+    //private void copyFile(String filename) {
+    private String copyFile(String filename) {
         String baseDir = Environment.getExternalStorageDirectory().getPath();
         String pathDir = baseDir + File.separator + filename;
 
@@ -104,32 +108,60 @@ public class MainActivity extends AppCompatActivity
             outputStream.close();
             outputStream = null;
         } catch (Exception e) {
+            pathDir = null;
             Log.d(TAG, "copyFile :: 파일 복사 중 예외 발생 "+e.toString() );
         }
-
+        return pathDir;
     }
 
     //private void read_yolo_file()
     private void init_yolo()
     {
-        fn_mdoel = "yolov3.weights";
+        fn_model = "yolov3.weights";
         fn_cfg = "yolov3.cfg";
+        fn_class = "object_detection_classes_yolov3.txt";
         str_framework = "darknet";
         int_backend = 0;
         //int_backend = 3;
         int_target = 1;
-/*        copyFile("haarcascade_frontalface_alt.xml");
-        copyFile("haarcascade_eye_tree_eyeglasses.xml");
 
-        Log.d(TAG, "read_cascade_file:");
+        fn_model = copyFile(fn_model);
+        fn_cfg = copyFile(fn_cfg);
+        fn_class = copyFile(fn_class);
+        Log.d(TAG, "init_yolo:");
+
+        if (null == fn_model || fn_model.isEmpty() || null == fn_cfg || fn_cfg.isEmpty() )
+        {
+            System.out.println("Can not copy yolo config or weight file");
+            System.exit(999);
+        }
 
         //cascadeClassifier_face = loadCascade( "haarcascade_frontalface_alt.xml");
-        Log.d(TAG, "read_cascade_file:");
+        ptr_net = loadDarknet(fn_model, fn_cfg, str_framework, int_backend, int_target);
+
+        //klasses = FileUtils.readLines(new File(fn_class), "utf-8");
+
+        //Scanner s = new Scanner(new File("filepath"));
+        try {
+            Scanner s = new Scanner(new File(fn_class));
+            klasses = new ArrayList<String>();
+            while (s.hasNext()) {
+                klasses.add(s.next());
+            }
+            s.close();
+        }
+        catch (FileNotFoundException ex)
+        {
+            System.out.println("Can not copy yolo config or weight file");
+            System.exit(999);
+            // insert code to run when exception occurs
+        }
+
+        Log.d(TAG, "init_yolo:");
 
         //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
-*/
-        //ptr_net = loadDarknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
-        ptr_net = loadDarknet();
+
+        //ptr_net = loadDarknet();
     }
 
 
@@ -171,12 +203,12 @@ public class MainActivity extends AppCompatActivity
                 //퍼미션 허가 안되어있다면 사용자에게 요청
                 requestPermissions(PERMISSIONS, PERMISSIONS_REQUEST_CODE);
             }
-            else
+            else if(0 == ptr_net)
             {
                 init_yolo(); //   추가
             }
         }
-        else
+        else if(0 == ptr_net)
         {
             init_yolo();   //  추가
         }
@@ -251,7 +283,7 @@ public class MainActivity extends AppCompatActivity
                 mean,
                 //swapRB.getNativeObjAddr(),
                 swapRB,
-                outNames,
+                //outNames,
                 thConf,
                 thNms,
                 klasses);
@@ -310,7 +342,7 @@ public class MainActivity extends AppCompatActivity
                         showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
                         return;
                     }
-                    else
+                    else if (0 == ptr_net)
                     {
                         init_yolo();
                         //ptr_net = load_darknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);

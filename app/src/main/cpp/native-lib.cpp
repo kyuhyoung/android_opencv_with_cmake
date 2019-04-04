@@ -169,32 +169,45 @@ jstring2string(JNIEnv *env, jstring jStr) {
 }
 
 extern "C"
-JNIEXPORT
-//Net
-jlong
-JNICALL
-Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarknet(JNIEnv *env, jobject instance
-/*
-        ,jstring modelPath, jstring configPath, jstring str_framework,
-        //std::string modelPath, std::string configPath, std::string str_framework,
+JNIEXPORT jlong JNICALL
+Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarknet(
+        JNIEnv *env, jobject instance
+        , jstring modelPath, jstring configPath, jstring str_framework,
         jint int_backend, jint int_target
-*/
         )
 {
+    /*
     printf("AAA loadDarknet\n");
     int a = 0;
     float b = 1;
     std::string c = "abc";
-    int int_backend = 0, int_target = 1;
+     */
+    //int int_backend = 0, int_target = 1;
 
 /*
     std::string fn_model = jstring2string(env, modelPath);
     std::string fn_config = jstring2string(env, configPath);
     std::string frmwork = jstring2string(env, str_framework);
 */
+    /*
+    const char *nativeFileNameString_model = env->GetStringUTFChars(modelPath, 0),
+        *nativeFileNameString_cfg = env->GetStringUTFChars(configPath, 0),
+        *nativeFileNameString_frmwork = env->GetStringUTFChars(str_framework, 0);
+    */
+    //string baseDir_model("/storage/emulated/0/"), baseDir_cfg("/storage/emulated/0/"), s_frmwork(nativeFileNameString_frmwork);
+    //baseDir_model.append(nativeFileNameString_model);
+    //baseDir_cfg.append(nativeFileNameString_cfg);
+    //const char *pathDir = baseDir.c_str();
+
+    //readNetFromDarknet(baseDir_cfg, baseDir_model);
+    //readNetFromDarknet(jstring2string(env, configPath), jstring2string(env, modelPath));
+
     jlong ret = 0; ret = (jlong) new Net();
+    //*((Net *) ret) = readNet(nativeFileNameString_model, nativeFileNameString_cfg, nativeFileNameString_frmwork);
+    *((Net *) ret) = readNet(env->GetStringUTFChars(modelPath, 0), env->GetStringUTFChars(configPath, 0), env->GetStringUTFChars(str_framework, 0));
+    //*((Net *) ret) = readNet(baseDir_model, baseDir_cfg, s_frmwork);
     //*((Net *) ret) = readNet(jstring2string(env, modelPath), jstring2string(env, configPath), jstring2string(env, str_framework));
-    *((Net *) ret) = readNet("C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.weights", "C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.cfg", "darknet");
+    //*((Net *) ret) = readNet("C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.weights", "C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.cfg", "darknet");
     //*((Net *) ret) = readNet("C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.weights", "C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.cfg", "darknet");
     //ret = (jlong) new Net() cv::dnn::readNet(fn_model, fn_cfg, str_framework);
     ((Net *) ret)->setPreferableBackend(int_backend);
@@ -215,7 +228,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         Size& inpSize,
         jlong addrMean,
         bool& swapRB,
-        jobject jOutNames,
+//        jobject jOutNames,
         float& thConf,
         float& thNms,
         jobject& jClasses)
@@ -228,8 +241,8 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         return;
     }
 
-    //jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/Object;");
-    jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/String;");
+    jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/Object;");
+    //jmethodID alGetId  = env->GetMethodID(alCls, "get", "(I)Ljava/lang/String;");
     jmethodID alSizeId = env->GetMethodID(alCls, "size", "()I");
 
     if (alGetId == nullptr || alSizeId == nullptr) {
@@ -238,15 +251,15 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         return;
     }
 
-    int n_str_outNames = static_cast<int>(env->CallIntMethod(jOutNames, alSizeId)),
+    int //n_str_outNames = static_cast<int>(env->CallIntMethod(jOutNames, alSizeId)),
         n_str_classes = static_cast<int>(env->CallIntMethod(jClasses, alSizeId));
 
-    if (n_str_outNames < 1 || n_str_classes < 1 ) {
+    if (/*n_str_outNames < 1 ||*/ n_str_classes < 1 ) {
         env->DeleteLocalRef(alCls);
         env->DeleteLocalRef(stCls);
         return;
     }
-
+/*
     std::vector<std::string> outNames, klasses;
     for (int i = 0; i < n_str_outNames; ++i) {
         jobject str = env->CallObjectMethod(jOutNames, alGetId, i);
@@ -254,6 +267,8 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         outNames.push_back(jstring2string(env, (jstring)str));
         env->DeleteLocalRef(str);
     }
+*/
+    std::vector<std::string> klasses;
     for (int i = 0; i < n_str_classes; ++i) {
         //jstring str = env->CallObjectMethod(jClasses, alGetId, i);
         jobject str = env->CallObjectMethod(jClasses, alGetId, i);
@@ -276,6 +291,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
     //vector<String> &outNames = *(vector<String> *)addrOutNames;
     //float &th_conf = *(float *)addrThConf, &th_nms = *(float *)addrThNms;
     //vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
+    std::vector<String> outNames = net.getUnconnectedOutLayersNames();
 
     blobFromImage(matInput, blob, skale, inpSize, mean, swapRB, false);
 
