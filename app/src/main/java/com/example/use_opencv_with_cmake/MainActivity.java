@@ -39,39 +39,36 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "opencv";
     private CameraBridgeViewBase mOpenCvCameraView;
-    private Mat matInput;
-    private Mat matResult;
+    private Mat mMatInput;
+    private Mat mMatResult;
     //private Net net;
-    private double skale;
-    private Size inpSize;
-    private Scalar mean;
-    private boolean swapRB;
-    private ArrayList<String> klasses;//outNames,
-    private float thConf, thNms;
-    private String fn_class, fn_model, fn_cfg, str_framework;
-    private int int_backend, int_target;
+    private double mScale;
+    private Size mInpSize;
+    private Scalar mMmean;
+    private boolean mSwapRB;
+    private ArrayList<String> mClasses;//outNames,
+    private float mThConf, mThNms;
+    private String mFnClass, mFnModel, mFnCfg, mStrFramework;
+    private int mIntBackend, mIntTarget;
 
 
 
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
     public native void yolo(long matAddrInput, long matAddrResult,
-                            long addrNet, double skale, Size inpSize,
-                            Scalar mean, boolean swapRB,
-                            //ArrayList<String> jOutNames,
-                            float thConf, float thNms, ArrayList<String> klasses);
+                            long addrNet, double mScale, long addrInpSize,
+                            long addrMmean, boolean mSwapRB,
+                            float mThConf, float mThNms, ArrayList<String> mClasses);
 
 
     //public native long loadCascade(String cascadeFileName );
     //public native long load_yolo_weight(String fn_yolo_weight);
-    public native long loadDarknet(String fn_mdoel, String fn_cfg, String str_framework, int int_backend, int int_target);
-    //public native long loadDarknet();
+    public native long loadDarknet(String fn_mdoel, String mFnCfg, String mStrFramework, int mIntBackend, int mIntTarget);
 
-
-    public native void detect(long cascadeClassifier_face,
-                              long cascadeClassifier_eye, long matAddrInput, long matAddrResult);
-    public long cascadeClassifier_face = 0;
-    public long cascadeClassifier_eye = 0;
-    public long ptr_net = 0;
+    public native void detect(long mCascadeClassifierFace,
+                              long mCascadeClassifierEye, long matAddrInput, long matAddrResult);
+    public long mCascadeClassifierFace = 0;
+    public long mCascadeClassifierEye = 0;
+    public long mPtrNet = 0;
 
 
 
@@ -114,39 +111,13 @@ public class MainActivity extends AppCompatActivity
         return pathDir;
     }
 
-    //private void read_yolo_file()
-    private void init_yolo()
+    private void load_classes()
     {
-        fn_model = "yolov3.weights";
-        fn_cfg = "yolov3.cfg";
-        fn_class = "object_detection_classes_yolov3.txt";
-        str_framework = "darknet";
-        int_backend = 0;
-        //int_backend = 3;
-        int_target = 1;
-
-        fn_model = copyFile(fn_model);
-        fn_cfg = copyFile(fn_cfg);
-        fn_class = copyFile(fn_class);
-        Log.d(TAG, "init_yolo:");
-
-        if (null == fn_model || fn_model.isEmpty() || null == fn_cfg || fn_cfg.isEmpty() )
-        {
-            System.out.println("Can not copy yolo config or weight file");
-            System.exit(999);
-        }
-
-        //cascadeClassifier_face = loadCascade( "haarcascade_frontalface_alt.xml");
-        ptr_net = loadDarknet(fn_model, fn_cfg, str_framework, int_backend, int_target);
-
-        //klasses = FileUtils.readLines(new File(fn_class), "utf-8");
-
-        //Scanner s = new Scanner(new File("filepath"));
         try {
-            Scanner s = new Scanner(new File(fn_class));
-            klasses = new ArrayList<String>();
+            Scanner s = new Scanner(new File(mFnClass));
+            mClasses = new ArrayList<String>();
             while (s.hasNext()) {
-                klasses.add(s.next());
+                mClasses.add(s.next());
             }
             s.close();
         }
@@ -156,12 +127,56 @@ public class MainActivity extends AppCompatActivity
             System.exit(999);
             // insert code to run when exception occurs
         }
+        return;
+    }
+
+
+    //private void read_yolo_file()
+    private void init_yolo()
+    {
+        if(0 != mPtrNet)
+        {
+            return;
+        }
+
+        mFnModel = "yolov3.weights";
+        mFnCfg = "yolov3.cfg";
+        mFnClass = "object_detection_classes_yolov3.txt";
+        mStrFramework = "darknet";
+        mIntBackend = 0;
+        //mIntBackend = 3;
+        mIntTarget = 1;
+
+        mFnModel = copyFile(mFnModel);
+        mFnCfg = copyFile(mFnCfg);
+        mFnClass = copyFile(mFnClass);
+        Log.d(TAG, "init_yolo:");
+
+        if (null == mFnModel || mFnModel.isEmpty() || null == mFnCfg || mFnCfg.isEmpty() )
+        {
+            System.out.println("Can not copy yolo config or weight file");
+            System.exit(999);
+        }
+
+        //mCascadeClassifierFace = loadCascade( "haarcascade_frontalface_alt.xml");
+        mPtrNet = loadDarknet(mFnModel, mFnCfg, mStrFramework, mIntBackend, mIntTarget);
+
+        //if(mClasses.isEmpty())
+        //{
+            load_classes();
+        //}
+        mScale = 0.00392;
+        mInpSize = new Size(416, 416);//   mInpSize.height = 416;
+        mMmean = new Scalar(0, 0, 0, 0);
+        mSwapRB = true;
+        mThConf = (float)0.5;  mThNms = (float)0.4;
+        //mClasses = FileUtils.readLines(new File(mFnClass), "utf-8");
+
+        //Scanner s = new Scanner(new File("filepath"));
 
         Log.d(TAG, "init_yolo:");
 
-        //cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
-
-        //ptr_net = loadDarknet();
+        //mCascadeClassifierEye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
     }
 
 
@@ -203,12 +218,12 @@ public class MainActivity extends AppCompatActivity
                 //퍼미션 허가 안되어있다면 사용자에게 요청
                 requestPermissions(PERMISSIONS, PERMISSIONS_REQUEST_CODE);
             }
-            else if(0 == ptr_net)
+            else if(0 == mPtrNet)
             {
                 init_yolo(); //   추가
             }
         }
-        else if(0 == ptr_net)
+        else if(0 == mPtrNet)
         {
             init_yolo();   //  추가
         }
@@ -262,33 +277,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
-        matInput = inputFrame.rgba();
+        mMatInput = inputFrame.rgba();
 
-        //if ( matResult != null ) matResult.release(); fix 2018. 8. 18
+        //if ( mMatResult != null ) mMatResult.release(); fix 2018. 8. 18
 
-        if ( matResult == null )
+        if ( mMatResult == null )
 
-            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+            mMatResult = new Mat(mMatInput.rows(), mMatInput.cols(), mMatInput.type());
 
-        //ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
-        yolo(matInput.getNativeObjAddr(),
-                matResult.getNativeObjAddr(),
-                //net.getNativeObjAddr(),
-                ptr_net,
-                //scale.getNativeObjAddr(),
-                skale,
-                //InpSize.getNativeObjAddr(),
-                inpSize,
-                //mean.getNativeObjAddr(),
-                mean,
-                //swapRB.getNativeObjAddr(),
-                swapRB,
-                //outNames,
-                thConf,
-                thNms,
-                klasses);
-
-        return matResult;
+        init_yolo();
+        //ConvertRGBtoGray(mMatInput.getNativeObjAddr(), mMatResult.getNativeObjAddr());
+        yolo(mMatInput.getNativeObjAddr(), mMatResult.getNativeObjAddr(), mPtrNet, mScale, mInpSize.getNativeObjAddr(), mMmean.getNativeObjAddr(), mSwapRB, mThConf, mThNms, mClasses);
+        return mMatResult;
     }
 
 
@@ -342,10 +342,10 @@ public class MainActivity extends AppCompatActivity
                         showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
                         return;
                     }
-                    else if (0 == ptr_net)
+                    else if (0 == mPtrNet)
                     {
                         init_yolo();
-                        //ptr_net = load_darknet(fn_mdoel, fn_cfg, str_framework, int_backend, int_target);
+                        //mPtrNet = load_darknet(fn_mdoel, mFnCfg, mStrFramework, mIntBackend, mIntTarget);
                         //read_yolo_file();
                     }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

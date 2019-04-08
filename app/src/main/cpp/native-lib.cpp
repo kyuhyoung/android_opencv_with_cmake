@@ -57,7 +57,7 @@ void drawPred(int classId, float conf, int left, int top, int right, int bottom,
 
 
 void postprocess(Mat& frame, const std::vector<Mat>& outs, Net& net,
-        float confThreshold, float nmsThreshold, std::vector<std::string>& klasses)
+        float confThreshold, float nmsThreshold, std::vector<std::string>& mClasses)
 {
     static std::vector<int> outLayers = net.getUnconnectedOutLayers();
     static std::string outLayerType = net.getLayer(outLayers[0])->type;
@@ -141,7 +141,7 @@ void postprocess(Mat& frame, const std::vector<Mat>& outs, Net& net,
         int idx = indices[i];
         Rect box = boxes[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y,
-                 box.x + box.width, box.y + box.height, frame, klasses);
+                 box.x + box.width, box.y + box.height, frame, mClasses);
     }
 }
 
@@ -172,27 +172,26 @@ extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarknet(
         JNIEnv *env, jobject instance
-        , jstring modelPath, jstring configPath, jstring str_framework,
-        jint int_backend, jint int_target
+        , jstring modelPath, jstring configPath, jstring mStrFramework,
+        jint mIntBackend, jint mIntTarget
         )
 {
     /*
-    printf("AAA loadDarknet\n");
     int a = 0;
     float b = 1;
     std::string c = "abc";
      */
-    //int int_backend = 0, int_target = 1;
+    //int mIntBackend = 0, mIntTarget = 1;
 
 /*
-    std::string fn_model = jstring2string(env, modelPath);
+    std::string mFnModel = jstring2string(env, modelPath);
     std::string fn_config = jstring2string(env, configPath);
-    std::string frmwork = jstring2string(env, str_framework);
+    std::string frmwork = jstring2string(env, mStrFramework);
 */
     /*
     const char *nativeFileNameString_model = env->GetStringUTFChars(modelPath, 0),
         *nativeFileNameString_cfg = env->GetStringUTFChars(configPath, 0),
-        *nativeFileNameString_frmwork = env->GetStringUTFChars(str_framework, 0);
+        *nativeFileNameString_frmwork = env->GetStringUTFChars(mStrFramework, 0);
     */
     //string baseDir_model("/storage/emulated/0/"), baseDir_cfg("/storage/emulated/0/"), s_frmwork(nativeFileNameString_frmwork);
     //baseDir_model.append(nativeFileNameString_model);
@@ -204,14 +203,14 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_loadDarknet(
 
     jlong ret = 0; ret = (jlong) new Net();
     //*((Net *) ret) = readNet(nativeFileNameString_model, nativeFileNameString_cfg, nativeFileNameString_frmwork);
-    *((Net *) ret) = readNet(env->GetStringUTFChars(modelPath, 0), env->GetStringUTFChars(configPath, 0), env->GetStringUTFChars(str_framework, 0));
+    *((Net *) ret) = readNet(env->GetStringUTFChars(modelPath, 0), env->GetStringUTFChars(configPath, 0), env->GetStringUTFChars(mStrFramework, 0));
     //*((Net *) ret) = readNet(baseDir_model, baseDir_cfg, s_frmwork);
-    //*((Net *) ret) = readNet(jstring2string(env, modelPath), jstring2string(env, configPath), jstring2string(env, str_framework));
+    //*((Net *) ret) = readNet(jstring2string(env, modelPath), jstring2string(env, configPath), jstring2string(env, mStrFramework));
     //*((Net *) ret) = readNet("C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.weights", "C:\\Users\\kevin\\Documents\\android_opencv_with_cmake\\app\\src\\main\\cpp\\yolov3.cfg", "darknet");
     //*((Net *) ret) = readNet("C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.weights", "C:/Users/kevin/Documents/android_opencv_with_cmake/app/src/main/cpp/yolov3.cfg", "darknet");
-    //ret = (jlong) new Net() cv::dnn::readNet(fn_model, fn_cfg, str_framework);
-    ((Net *) ret)->setPreferableBackend(int_backend);
-    ((Net *) ret)->setPreferableTarget(int_target);
+    //ret = (jlong) new Net() cv::dnn::readNet(mFnModel, mFnCfg, mStrFramework);
+    ((Net *) ret)->setPreferableBackend(mIntBackend);
+    ((Net *) ret)->setPreferableTarget(mIntTarget);
     //return (jlong)(&net);
     return ret;
 }
@@ -223,15 +222,15 @@ JNIEXPORT void JNICALL
 Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         jobject instance, jlong matAddrInput, jlong matAddrResult, jlong addrNet,
         //jlong addrScale,
-        double& skale,
-        //jlong addrInpSize,
-        Size& inpSize,
+        double mScale,
+        jlong addrInpSize,
+        //Size mInpSize,
         jlong addrMean,
-        bool& swapRB,
+        bool mSwapRB,
 //        jobject jOutNames,
-        float& thConf,
-        float& thNms,
-        jobject& jClasses)
+        float mThConf,
+        float mThNms,
+        jobject jClasses)
 {
     // TODO
     // 입력 RGBA 이미지를 GRAY 이미지로 변환
@@ -260,7 +259,7 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         return;
     }
 /*
-    std::vector<std::string> outNames, klasses;
+    std::vector<std::string> outNames, mClasses;
     for (int i = 0; i < n_str_outNames; ++i) {
         jobject str = env->CallObjectMethod(jOutNames, alGetId, i);
         //jstring str = env->CallObjectMethod(jOutNames, alGetId, i);
@@ -268,40 +267,40 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
         env->DeleteLocalRef(str);
     }
 */
-    std::vector<std::string> klasses;
+    std::vector<std::string> mClasses;
     for (int i = 0; i < n_str_classes; ++i) {
         //jstring str = env->CallObjectMethod(jClasses, alGetId, i);
         jobject str = env->CallObjectMethod(jClasses, alGetId, i);
-        klasses.push_back(jstring2string(env, (jstring)str));
+        mClasses.push_back(jstring2string(env, (jstring)str));
         env->DeleteLocalRef(str);
     }
 
 
 
     Mat blob,
-        &matInput = *(Mat *)matAddrInput,
-        &matResult = *(Mat *)matAddrResult;
+        &mMatInput = *(Mat *)matAddrInput,
+        &mMatResult = *(Mat *)matAddrResult;
 
-    matInput.copyTo(matResult);
-    //double &skale = *(double *)addrScale;
-    //Size &inpSize = *(Size *)addrInpSize;
-    Scalar &mean = *(Scalar *)addrMean;
-    //bool &swapRB = *(bool *)addrSwapRB;
+    mMatInput.copyTo(mMatResult);
+    //double &mScale = *(double *)addrScale;
+    //Size &mInpSize = *(Size *)addrInpSize;
+    Scalar &mMmean = *(Scalar *)addrMean;
+    //bool &mSwapRB = *(bool *)addrmSwapRB;
     Net &net = *(Net *)addrNet;
     //vector<String> &outNames = *(vector<String> *)addrOutNames;
-    //float &th_conf = *(float *)addrThConf, &th_nms = *(float *)addrThNms;
-    //vector<std::string> &klasses = *(vector<std::string> *)addrClasses;
+    //float &th_conf = *(float *)addrmThConf, &th_nms = *(float *)addrmThNms;
+    //vector<std::string> &mClasses = *(vector<std::string> *)addrClasses;
     std::vector<String> outNames = net.getUnconnectedOutLayersNames();
 
-    blobFromImage(matInput, blob, skale, inpSize, mean, swapRB, false);
+    blobFromImage(mMatInput, blob, mScale, mInpSize, mMmean, mSwapRB, false);
 
     // Run a model.
     net.setInput(blob);
     if (net.getLayer(0)->outputNameToIndex("im_info") != -1)  // Faster-RCNN or R-FCN
     {
-        //resize(frame, frame, inpSize);
-        resize(matInput, matInput, inpSize);
-        Mat imInfo = (Mat_<float>(1, 3) << inpSize.height, inpSize.width, 1.6f);
+        //resize(frame, frame, mInpSize);
+        resize(mMatInput, mMatInput, mInpSize);
+        Mat imInfo = (Mat_<float>(1, 3) << mInpSize.height, mInpSize.width, 1.6f);
         net.setInput(imInfo, "im_info");
     }
     std::vector<Mat> outs;
@@ -309,24 +308,24 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_yolo(JNIEnv *env,
 
 
     //postprocess(frame, outs, net);
-    postprocess(matResult, outs, net, thConf, thNms, klasses);
+    postprocess(mMatResult, outs, net, mThConf, mThNms, mClasses);
 
     // Put efficiency information.
     std::vector<double> layersTimes;
     double freq = getTickFrequency() / 1000;
     double t = net.getPerfProfile(layersTimes) / freq;
     std::string label = format("Inference time: %.2f ms", t);
-    putText(matResult, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0));
+    putText(mMatResult, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0));
 
 
 
 #if 1
 /////////////////////////////////////////////////////
-    //matResult = matInput;
-    //rectangle(matResult, Point2d(100, 150), Point2d(200, 300), CV_RGB(255, 0, 0));
+    //mMatResult = mMatInput;
+    //rectangle(mMatResult, Point2d(100, 150), Point2d(200, 300), CV_RGB(255, 0, 0));
 /////////////////////////////////////////////////////
 #else
-    cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
+    cvtColor(mMatInput, mMatResult, COLOR_RGBA2GRAY);
 #endif
 }
 
@@ -338,9 +337,9 @@ Java_com_example_use_1opencv_1with_1cmake_MainActivity_ConvertRGBtoGray(JNIEnv *
     // TODO
     // 입력 RGBA 이미지를 GRAY 이미지로 변환
 
-    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &mMatInput = *(Mat *)matAddrInput;
 
-    Mat &matResult = *(Mat *)matAddrResult;
+    Mat &mMatResult = *(Mat *)matAddrResult;
 
-    cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
+    cvtColor(mMatInput, mMatResult, COLOR_RGBA2GRAY);
 }
